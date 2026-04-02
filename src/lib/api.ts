@@ -3,7 +3,7 @@ const PIN_KEY = "neofeed_pin";
 const AUTH_KEY = "neofeed_authenticated";
 
 export function getApiUrl(): string {
-  return localStorage.getItem(API_URL_KEY) || "http://localhost:8000";
+  return localStorage.getItem(API_URL_KEY) || "https://neofeed.onrender.com";
 }
 
 export function setApiUrl(url: string) {
