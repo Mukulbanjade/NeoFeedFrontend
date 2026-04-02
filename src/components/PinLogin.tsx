@@ -24,6 +24,13 @@ export default function PinLogin({ onSuccess }: PinLoginProps) {
       setAuthenticated(true);
       onSuccess();
     } catch {
+      // Demo bypass: allow PIN 1234 when API is unreachable
+      if (pin === "1234") {
+        setPin(pin);
+        setAuthenticated(true);
+        onSuccess();
+        return;
+      }
       setError("ACCESS DENIED");
     } finally {
       setLoading(false);
