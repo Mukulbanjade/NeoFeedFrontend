@@ -5,7 +5,7 @@ import NavBar from "@/components/NavBar";
 import FeedCard from "@/components/FeedCard";
 import FeedSidebar from "@/components/FeedSidebar";
 import SettingsModal from "@/components/SettingsModal";
-import { isAuthenticated, logout, apiFetch, type Cluster } from "@/lib/api";
+import { isAuthenticated, logout, apiFetch, clusterTrustLevel, type Cluster } from "@/lib/api";
 
 // Demo data for when API is unavailable
 const DEMO_CLUSTERS: Cluster[] = [
@@ -71,7 +71,7 @@ export default function Index() {
 
   const filtered = useMemo(() => {
     return clusters.filter((c) => {
-      if (!trustFilters.includes(c.trust_level)) return false;
+      if (!trustFilters.includes(clusterTrustLevel(c))) return false;
       if (c.importance_score < minImportance) return false;
       if (search) {
         const q = search.toLowerCase();

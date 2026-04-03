@@ -3,7 +3,14 @@ import { motion, AnimatePresence } from "framer-motion";
 import { ChevronDown, ExternalLink } from "lucide-react";
 import TrustBadge from "./TrustBadge";
 import VoteButtons from "./VoteButtons";
-import { type Cluster, type Article, apiFetch } from "@/lib/api";
+import {
+  type Cluster,
+  type Article,
+  apiFetch,
+  clusterTrustLevel,
+  clusterSourceCount,
+  articleSourceName,
+} from "@/lib/api";
 
 interface FeedCardProps {
   cluster: Cluster;
@@ -14,17 +21,21 @@ export default function FeedCard({ cluster, index }: FeedCardProps) {
   const [expanded, setExpanded] = useState(false);
   const [articles, setArticles] = useState<Article[]>(cluster.articles || []);
   const [loadingArticles, setLoadingArticles] = useState(false);
+  const [sourcesError, setSourcesError] = useState<string | null>(null);
 
   const stars = Math.min(5, Math.round(cluster.importance_score / 2));
 
   const toggleExpand = async () => {
-    if (!expanded && articles.length === 0) {
+    const opening = !expanded;
+    if (opening && (articles.length === 0 || sourcesError)) {
       setLoadingArticles(true);
       try {
+        setSourcesError(null);
         const data = await apiFetch(`/articles/cluster/${cluster.id}`);
-        setArticles(Array.isArray(data) ? data : data.articles || []);
+        const list = Array.isArray(data) ? data : data.articles || [];
+        setArticles(list);
       } catch {
-        // keep empty
+        setSourcesError("Could not load sources (check PIN and API URL).");
       } finally {
         setLoadingArticles(false);
       }
@@ -44,7 +55,7 @@ export default function FeedCard({ cluster, index }: FeedCardProps) {
 
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 mb-2 flex-wrap">
-            <TrustBadge level={cluster.trust_level} />
+            <TrustBadge level={clusterTrustLevel(cluster)} />
             <span className="font-mono text-[10px] px-2 py-0.5 rounded-sm border border-border text-muted-foreground uppercase tracking-wider">
               {cluster.category}
             </span>
@@ -54,12 +65,12 @@ export default function FeedCard({ cluster, index }: FeedCardProps) {
             {cluster.representative_title}
           </h3>
 
-          <p className="text-muted-foreground text-xs leading-relaxed mb-3 line-clamp-3 font-body">
+          <p className="text-muted-foreground text-xs leading-relaxed mb-3 line-clamp-6 font-body whitespace-pre-wrap">
             {cluster.summary}
           </p>
 
           <div className="flex items-center gap-4 text-[11px] text-muted-foreground font-mono">
-            <span>from {cluster.source_count} sources</span>
+            <span>from {clusterSourceCount(cluster)} sources</span>
             <span className="text-warning">{"⭐".repeat(stars)}{"☆".repeat(5 - stars)}</span>
           </div>
 
@@ -83,6 +94,8 @@ export default function FeedCard({ cluster, index }: FeedCardProps) {
                 <div className="mt-3 border-t border-border pt-3 space-y-2">
                   {loadingArticles ? (
                     <p className="text-muted-foreground text-xs font-mono animate-pulse-glow">LOADING...</p>
+                  ) : sourcesError ? (
+                    <p className="text-destructive/90 text-xs font-mono">{sourcesError}</p>
                   ) : articles.length === 0 ? (
                     <p className="text-muted-foreground text-xs font-mono">No source data available</p>
                   ) : (
@@ -96,7 +109,7 @@ export default function FeedCard({ cluster, index }: FeedCardProps) {
                       >
                         <ExternalLink className="w-3 h-3 flex-shrink-0" />
                         <span className="font-mono text-[10px] text-foreground/50 flex-shrink-0">
-                          [{article.source}]
+                          [{articleSourceName(article)}]
                         </span>
                         <span className="truncate group-hover:text-accent">{article.title}</span>
                       </a>

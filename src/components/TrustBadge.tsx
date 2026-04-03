@@ -1,6 +1,4 @@
-import { type Cluster } from "@/lib/api";
-
-type TrustLevel = Cluster["trust_level"];
+import { type TrustLevel } from "@/lib/api";
 
 const TRUST_CONFIG: Record<TrustLevel, { label: string; emoji: string; className: string }> = {
   verified: { label: "VERIFIED", emoji: "✅", className: "bg-primary/20 text-foreground border-primary/40" },
