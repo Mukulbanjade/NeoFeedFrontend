@@ -48,9 +48,9 @@ export default function FeedCard({ cluster, index }: FeedCardProps) {
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.4, delay: index * 0.05 }}
-      className="neo-card p-4"
+      className="neo-card p-3 sm:p-4"
     >
-      <div className="flex gap-3">
+      <div className="flex gap-2 sm:gap-3">
         <VoteButtons clusterId={cluster.id} initialVote={cluster.user_vote} />
 
         <div className="flex-1 min-w-0">
