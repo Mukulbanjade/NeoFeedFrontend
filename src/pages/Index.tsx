@@ -103,8 +103,8 @@ export default function Index() {
             onSettingsClick={() => setSettingsOpen(true)}
           />
 
-          <div className="flex flex-1 max-w-7xl mx-auto w-full">
-            <main className="flex-1 p-4 space-y-3 overflow-y-auto">
+           <div className="flex flex-1 max-w-7xl mx-auto w-full">
+             <main className="flex-1 px-2 sm:px-4 py-3 sm:py-4 space-y-2 sm:space-y-3 overflow-y-auto">
               {loading ? (
                 <div className="flex items-center justify-center py-20">
                   <p className="font-mono text-foreground text-sm animate-pulse-glow tracking-wider">LOADING FEED...</p>
