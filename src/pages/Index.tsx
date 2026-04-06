@@ -50,6 +50,10 @@ export default function Index() {
   const [loading, setLoading] = useState(false);
   const [trustFilters, setTrustFilters] = useState<string[]>(["verified", "likely_true", "unverified", "likely_false"]);
   const [minImportance, setMinImportance] = useState(1);
+  const [summaryOpen, setSummaryOpen] = useState(false);
+  const [summaryLoading, setSummaryLoading] = useState(false);
+  const [summaryCategory, setSummaryCategory] = useState("all");
+  const [feedSummary, setFeedSummary] = useState("");
 
   const WAR_PATTERNS = [
     /\bwar\b/i, /\bconflict\b/i, /\bmilitary\b/i, /\bmissile\b/i, /\bdrone\b/i,
@@ -101,6 +105,21 @@ export default function Index() {
     setAuthed(false);
   };
 
+  const loadFeedSummary = async (cat: string) => {
+    setSummaryCategory(cat);
+    setSummaryOpen(true);
+    setSummaryLoading(true);
+    try {
+      const params = new URLSearchParams({ category: cat, limit: "40" });
+      const data = await apiFetch(`/clusters/summary?${params}`);
+      setFeedSummary(data?.summary || "No summary available right now.");
+    } catch {
+      setFeedSummary("Could not generate summary right now. Please try again in a moment.");
+    } finally {
+      setSummaryLoading(false);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-background relative">
       <MatrixRain />
@@ -120,6 +139,49 @@ export default function Index() {
 
           <div className="flex flex-1 max-w-7xl mx-auto w-full">
             <main className="flex-1 p-4 space-y-3 overflow-y-auto">
+              <div className="flex justify-end">
+                <button
+                  onClick={() => loadFeedSummary(category === "all" ? "all" : category)}
+                  className="font-mono text-[10px] px-3 py-1.5 border border-border rounded-sm text-muted-foreground hover:text-foreground hover:border-foreground/40 transition-colors tracking-wider"
+                >
+                  SUMMARIZE {category.toUpperCase()} FEED
+                </button>
+              </div>
+
+              {summaryOpen && (
+                <div className="neo-card p-3 space-y-2">
+                  <div className="flex items-center justify-between gap-2">
+                    <div className="font-mono text-[11px] tracking-wider text-foreground">
+                      FEED SUMMARY: {summaryCategory.toUpperCase()}
+                    </div>
+                    <button
+                      onClick={() => setSummaryOpen(false)}
+                      className="font-mono text-[10px] text-muted-foreground hover:text-foreground"
+                    >
+                      CLOSE
+                    </button>
+                  </div>
+                  <div className="flex gap-1.5 flex-wrap">
+                    {["all", "ai", "crypto", "war"].map((cat) => (
+                      <button
+                        key={cat}
+                        onClick={() => loadFeedSummary(cat)}
+                        className={`font-mono text-[10px] px-2 py-1 rounded-sm border transition-colors ${
+                          summaryCategory === cat
+                            ? "border-primary text-foreground"
+                            : "border-border text-muted-foreground hover:text-foreground"
+                        }`}
+                      >
+                        {cat.toUpperCase()}
+                      </button>
+                    ))}
+                  </div>
+                  <p className="text-xs text-muted-foreground leading-relaxed whitespace-pre-wrap">
+                    {summaryLoading ? "Generating summary..." : feedSummary}
+                  </p>
+                </div>
+              )}
+
               {loading ? (
                 <div className="flex items-center justify-center py-20">
                   <p className="font-mono text-foreground text-sm animate-pulse-glow tracking-wider">LOADING FEED...</p>
