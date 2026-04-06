@@ -9,7 +9,7 @@ interface NavBarProps {
   onSettingsClick: () => void;
 }
 
-const TABS = ["ALL", "AI", "CRYPTO"];
+const TABS = ["ALL", "AI", "CRYPTO", "WAR"];
 
 export default function NavBar({ category, onCategoryChange, search, onSearchChange, onSettingsClick }: NavBarProps) {
   const [mobileSearchOpen, setMobileSearchOpen] = useState(false);

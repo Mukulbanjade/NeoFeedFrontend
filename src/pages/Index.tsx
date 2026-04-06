@@ -51,11 +51,23 @@ export default function Index() {
   const [trustFilters, setTrustFilters] = useState<string[]>(["verified", "likely_true", "unverified", "likely_false"]);
   const [minImportance, setMinImportance] = useState(1);
 
+  const WAR_PATTERNS = [
+    /\bwar\b/i, /\bconflict\b/i, /\bmilitary\b/i, /\bmissile\b/i, /\bdrone\b/i,
+    /\bceasefire\b/i, /\bsanctions\b/i, /\bnato\b/i, /\bdefense\b/i, /\bdefence\b/i,
+    /\bstrike\b/i, /\bfrontline\b/i, /\bairstrike\b/i, /\bgeopolitics?\b/i,
+  ];
+
+  const isWarCluster = (c: Cluster) => {
+    const text = `${c.representative_title || ""} ${c.summary || ""}`.toLowerCase();
+    return WAR_PATTERNS.some((p) => p.test(text));
+  };
+
   const fetchClusters = async () => {
     setLoading(true);
     try {
       const params = new URLSearchParams({ personalized: "true", limit: "50" });
-      if (category !== "all") params.set("category", category);
+      // "war" uses keyword-driven grouping from mixed feeds; don't pass unknown backend category.
+      if (category !== "all" && category !== "war") params.set("category", category);
       const data = await apiFetch(`/clusters/?${params}`);
       setClusters(Array.isArray(data) ? data : data.clusters || []);
     } catch {
@@ -71,6 +83,7 @@ export default function Index() {
 
   const filtered = useMemo(() => {
     return clusters.filter((c) => {
+      if (category === "war" && !isWarCluster(c)) return false;
       if (!trustFilters.includes(clusterTrustLevel(c))) return false;
       if (c.importance_score < minImportance) return false;
       if (search) {
@@ -105,8 +118,8 @@ export default function Index() {
             onSettingsClick={() => setSettingsOpen(true)}
           />
 
-           <div className="flex flex-1 max-w-7xl mx-auto w-full">
-             <main className="flex-1 px-2 sm:px-4 py-3 sm:py-4 space-y-2 sm:space-y-3 overflow-y-auto">
+          <div className="flex flex-1 max-w-7xl mx-auto w-full">
+            <main className="flex-1 p-4 space-y-3 overflow-y-auto">
               {loading ? (
                 <div className="flex items-center justify-center py-20">
                   <p className="font-mono text-foreground text-sm animate-pulse-glow tracking-wider">LOADING FEED...</p>

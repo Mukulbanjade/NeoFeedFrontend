@@ -24,6 +24,10 @@ export default function FeedCard({ cluster, index }: FeedCardProps) {
   const [sourcesError, setSourcesError] = useState<string | null>(null);
 
   const stars = Math.min(5, Math.round(cluster.importance_score / 2));
+  const cleanSummary = (cluster.summary || "")
+    .replace(/<[^>]+>/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
 
   const toggleExpand = async () => {
     const opening = !expanded;
@@ -66,7 +70,7 @@ export default function FeedCard({ cluster, index }: FeedCardProps) {
           </h3>
 
           <p className="text-muted-foreground text-xs leading-relaxed mb-3 line-clamp-6 font-body whitespace-pre-wrap">
-            {cluster.summary}
+            {cleanSummary}
           </p>
 
           <div className="flex items-center gap-4 text-[11px] text-muted-foreground font-mono">
