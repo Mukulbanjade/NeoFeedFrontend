@@ -28,6 +28,9 @@ export default function FeedCard({ cluster, index }: FeedCardProps) {
     .replace(/<[^>]+>/g, " ")
     .replace(/\s+/g, " ")
     .trim();
+  const titleNorm = (cluster.representative_title || "").replace(/\s+/g, " ").trim().toLowerCase();
+  const summaryNorm = cleanSummary.replace(/\s+/g, " ").trim().toLowerCase();
+  const shouldShowSummary = !!cleanSummary && summaryNorm !== titleNorm;
 
   const toggleExpand = async () => {
     const opening = !expanded;
@@ -69,9 +72,11 @@ export default function FeedCard({ cluster, index }: FeedCardProps) {
             {cluster.representative_title}
           </h3>
 
-          <p className="text-muted-foreground text-xs leading-relaxed mb-3 line-clamp-6 font-body whitespace-pre-wrap">
-            {cleanSummary}
-          </p>
+          {shouldShowSummary && (
+            <p className="text-muted-foreground text-xs leading-relaxed mb-3 line-clamp-6 font-body whitespace-pre-wrap">
+              {cleanSummary}
+            </p>
+          )}
 
           <div className="flex items-center gap-4 text-[11px] text-muted-foreground font-mono">
             <span>from {clusterSourceCount(cluster)} sources</span>
