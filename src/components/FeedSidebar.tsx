@@ -19,7 +19,50 @@ const TRUST_OPTS = [
   { key: "likely_false", label: "Likely False" },
 ];
 
+<<<<<<< HEAD
 function SidebarContent({ trustFilters, onTrustFiltersChange, minImportance, onMinImportanceChange, prefs }: SidebarProps & { prefs: Preferences | null }) {
+=======
+export default function FeedSidebar({ trustFilters, onTrustFiltersChange, minImportance, onMinImportanceChange }: SidebarProps) {
+  const [open, setOpen] = useState(true);
+  const [prefs, setPrefs] = useState<Preferences | null>(null);
+
+  const normalizePrefs = (raw: unknown): Preferences | null => {
+    if (!raw || typeof raw !== "object") return null;
+    const src = raw as Record<string, unknown>;
+
+    const sourceWeights = (src.source_weights && typeof src.source_weights === "object")
+      ? (src.source_weights as Record<string, number>)
+      : {};
+    const topicWeights = (src.topic_weights && typeof src.topic_weights === "object")
+      ? (src.topic_weights as Record<string, number>)
+      : {};
+
+    const ai = typeof src.ai_weight === "number"
+      ? src.ai_weight
+      : (typeof topicWeights.ai === "number" ? topicWeights.ai : 0.5);
+    const crypto = typeof src.crypto_weight === "number"
+      ? src.crypto_weight
+      : (typeof topicWeights.crypto === "number" ? topicWeights.crypto : 0.5);
+
+    const favoriteSources = Array.isArray(src.favorite_sources)
+      ? src.favorite_sources.filter((x): x is string => typeof x === "string")
+      : Object.entries(sourceWeights)
+          .sort((a, b) => (b[1] ?? 0) - (a[1] ?? 0))
+          .slice(0, 5)
+          .map(([name]) => name);
+
+    return {
+      ai_weight: Number.isFinite(ai) ? ai : 0.5,
+      crypto_weight: Number.isFinite(crypto) ? crypto : 0.5,
+      favorite_sources: favoriteSources,
+    };
+  };
+
+  useEffect(() => {
+    apiFetch("/preferences/").then((data) => setPrefs(normalizePrefs(data))).catch(() => {});
+  }, []);
+
+>>>>>>> e6b12bc (fix(frontend): prevent blank-screen crash on preferences payload mismatch)
   const toggleTrust = (key: string) => {
     onTrustFiltersChange(
       trustFilters.includes(key) ? trustFilters.filter((f) => f !== key) : [...trustFilters, key]

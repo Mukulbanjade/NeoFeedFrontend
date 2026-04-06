@@ -75,7 +75,9 @@ export default function Index() {
       if (c.importance_score < minImportance) return false;
       if (search) {
         const q = search.toLowerCase();
-        return c.representative_title.toLowerCase().includes(q) || c.summary.toLowerCase().includes(q);
+        const title = (c.representative_title || "").toLowerCase();
+        const summary = (c.summary || "").toLowerCase();
+        return title.includes(q) || summary.includes(q);
       }
       return true;
     });
