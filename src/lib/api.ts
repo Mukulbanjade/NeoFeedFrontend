@@ -2,8 +2,23 @@ const API_URL_KEY = "neofeed_api_url";
 const PIN_KEY = "neofeed_pin";
 const AUTH_KEY = "neofeed_authenticated";
 
+const DEFAULT_API_URL = "https://neofeed.onrender.com";
+
+function normalizeApiBase(url: string): string {
+  const t = url.trim().replace(/\/+$/, "");
+  return t || DEFAULT_API_URL;
+}
+
 export function getApiUrl(): string {
-  return localStorage.getItem(API_URL_KEY) || "https://neofeed.onrender.com";
+  const stored = localStorage.getItem(API_URL_KEY);
+  if (stored != null && stored.trim() !== "") {
+    return normalizeApiBase(stored);
+  }
+  const fromEnv = import.meta.env.VITE_API_URL;
+  if (typeof fromEnv === "string" && fromEnv.trim() !== "") {
+    return normalizeApiBase(fromEnv);
+  }
+  return DEFAULT_API_URL;
 }
 
 export function setApiUrl(url: string) {
