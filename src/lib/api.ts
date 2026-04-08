@@ -46,6 +46,24 @@ export function logout() {
   localStorage.removeItem(AUTH_KEY);
 }
 
+/** Fire-and-forget GET /health so Render (or similar) starts waking before PIN / clusters. No PIN required. */
+export async function wakeBackend(): Promise<void> {
+  const base = getApiUrl();
+  const ctrl = new AbortController();
+  const timeout = window.setTimeout(() => ctrl.abort(), 120_000);
+  try {
+    await fetch(`${base}/health`, {
+      method: "GET",
+      mode: "cors",
+      signal: ctrl.signal,
+    });
+  } catch {
+    // Cold starts can exceed client timeouts; ignore — login or feed may still succeed.
+  } finally {
+    window.clearTimeout(timeout);
+  }
+}
+
 export async function apiFetch(path: string, options: RequestInit = {}) {
   const url = `${getApiUrl()}${path}`;
   const pin = getPin();

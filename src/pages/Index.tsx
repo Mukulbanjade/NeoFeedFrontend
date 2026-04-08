@@ -54,6 +54,7 @@ export default function Index() {
   const [summaryLoading, setSummaryLoading] = useState(false);
   const [summaryCategory, setSummaryCategory] = useState("all");
   const [feedSummary, setFeedSummary] = useState("");
+  const [showSlowLoadHint, setShowSlowLoadHint] = useState(false);
 
   const WAR_PATTERNS = [
     /\bwar\b/i, /\bconflict\b/i, /\bmilitary\b/i, /\bmissile\b/i, /\bdrone\b/i,
@@ -84,6 +85,15 @@ export default function Index() {
   useEffect(() => {
     if (authed) fetchClusters();
   }, [authed, category]);
+
+  useEffect(() => {
+    if (!loading) {
+      setShowSlowLoadHint(false);
+      return;
+    }
+    const id = window.setTimeout(() => setShowSlowLoadHint(true), 10_000);
+    return () => window.clearTimeout(id);
+  }, [loading]);
 
   const filtered = useMemo(() => {
     return clusters.filter((c) => {
@@ -183,8 +193,13 @@ export default function Index() {
               )}
 
               {loading ? (
-                <div className="flex items-center justify-center py-20">
+                <div className="flex flex-col items-center justify-center gap-3 py-20 px-4 text-center">
                   <p className="font-mono text-foreground text-sm animate-pulse-glow tracking-wider">LOADING FEED...</p>
+                  {showSlowLoadHint && (
+                    <p className="font-mono text-muted-foreground text-[10px] max-w-md leading-relaxed tracking-wide">
+                      Still waiting — the API host may be waking from sleep (common on free tiers). This can take up to a minute the first time.
+                    </p>
+                  )}
                 </div>
               ) : filtered.length === 0 ? (
                 <div className="flex items-center justify-center py-20">

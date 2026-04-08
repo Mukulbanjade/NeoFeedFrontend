@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { apiFetch, setPin, setAuthenticated } from "@/lib/api";
 
@@ -10,6 +10,16 @@ export default function PinLogin({ onSuccess }: PinLoginProps) {
   const [pin, setPinValue] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [showSlowVerifyHint, setShowSlowVerifyHint] = useState(false);
+
+  useEffect(() => {
+    if (!loading) {
+      setShowSlowVerifyHint(false);
+      return;
+    }
+    const id = window.setTimeout(() => setShowSlowVerifyHint(true), 10_000);
+    return () => window.clearTimeout(id);
+  }, [loading]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -85,6 +95,11 @@ export default function PinLogin({ onSuccess }: PinLoginProps) {
           >
             {loading ? "VERIFYING..." : "ENTER"}
           </button>
+          {showSlowVerifyHint && loading && (
+            <p className="mt-3 font-mono text-[10px] text-muted-foreground text-center leading-relaxed px-1">
+              The server may be starting after idle — this can take up to a minute on free hosting.
+            </p>
+          )}
         </form>
 
         <div className="mt-6 text-center">
