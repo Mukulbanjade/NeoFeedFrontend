@@ -1,36 +1,28 @@
 # NeoFeed Frontend
 
-Terminal-style dashboard for **[NeoFeed](https://github.com/Mukulbanjade/NeoFeed)** — clustered AI & crypto news with trust labels, filters, war-topic keyword view, and optional Gemini-powered feed summaries.
-
-## Stack
-
-- React 18, TypeScript, Vite 5
-- Tailwind CSS, shadcn/ui, TanStack Query
-- PIN-gated API calls to the FastAPI backend (`X-Pin` header)
+Terminal-style UI for [NeoFeed](https://github.com/Mukulbanjade/NeoFeed) (FastAPI + Supabase). React, TypeScript, Vite.
 
 ## Run locally
 
 ```bash
-npm install
+npm ci
 npm run dev
 ```
 
-Opens at `http://localhost:8080` (see `vite.config.ts`).
+## Deploy on Vercel
+
+- Connect this **repository** (not a parent monorepo folder). **Root Directory** should be the project root (where `package.json` lives).
+- Framework: **Vite** (or leave auto-detect). Build output: **`dist`**.
+- `vercel.json` pins `npm ci` + `vite` build so installs stay small (no Playwright/browsers in CI).
+
+Set `VITE_API_URL` in Vercel → Environment Variables to your API base (e.g. `https://neofeed.onrender.com`).
+
+### If you see “dependency size exceeds 500 MB”
+
+That usually means Vercel is installing **too much** (e.g. Playwright browsers, Bun + duplicate trees, or the **wrong root** so it pulls an entire monorepo). This repo removes Playwright from npm dependencies and uses `npm ci` only. Double-check the GitHub repo and Root Directory on Vercel.
+
+**Do not deploy the Python NeoFeed backend on Vercel** — use Render (or similar). Vercel is for this static frontend only.
 
 ## Environment
 
-| Variable | Purpose |
-|----------|---------|
-| `VITE_API_URL` | Backend base URL (e.g. `https://your-api.onrender.com`). If unset, defaults to production API in `src/lib/api.ts`. |
-
-Copy `.env.example` to `.env.local` for local overrides (gitignored via `*.local`).
-
-## Deploy
-
-Build: `npm run build` → static output in `dist/`. Host on Vercel, Netlify, or any static CDN. Set `VITE_API_URL` in the host’s environment to match your deployed API.
-
-## Repo layout
-
-- `src/pages/Index.tsx` — main feed, categories, summaries
-- `src/lib/api.ts` — base URL, PIN storage, `apiFetch`
-- `src/components/` — feed cards, sidebar, PIN login, settings
+See `.env.example` for `VITE_API_URL`.
