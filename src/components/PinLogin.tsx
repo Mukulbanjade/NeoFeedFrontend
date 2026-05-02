@@ -33,8 +33,12 @@ export default function PinLogin({ onSuccess }: PinLoginProps) {
       setPin(pin);
       setAuthenticated(true);
       onSuccess();
-    } catch {
-      setError("ACCESS DENIED");
+    } catch (err) {
+      const raw = err instanceof Error ? err.message : "";
+      if (raw.includes("PIN required")) setError(raw);
+      else if (raw.toLowerCase().includes("invalid pin") || raw.includes("401")) setError("ACCESS DENIED — wrong PIN.");
+      else if (raw) setError(raw);
+      else setError("ACCESS DENIED");
     } finally {
       setLoading(false);
     }

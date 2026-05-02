@@ -43,9 +43,15 @@ export default function Index() {
       if (category !== "all" && category !== "war") params.set("category", category);
       const data = await apiFetch(`/clusters/?${params}`);
       setClusters(Array.isArray(data) ? data : data.clusters || []);
-    } catch {
+    } catch (e) {
       setClusters([]);
-      setFeedError("Could not load feed from API. Check backend status, PIN, and API endpoint in Settings.");
+      const msg =
+        e instanceof Error && e.message
+          ? e.message
+          : "Could not load feed from API. Check backend status, PIN, and API endpoint in Settings.";
+      setFeedError(msg);
+      // apiFetch may call logout() on 401 — align React state so the PIN gate reappears.
+      setAuthed(isAuthenticated());
     } finally {
       setLoading(false);
     }

@@ -66,14 +66,37 @@ export async function wakeBackend(): Promise<void> {
 
 export async function apiFetch(path: string, options: RequestInit = {}) {
   const url = `${getApiUrl()}${path}`;
-  const pin = getPin();
+  const pin = getPin().trim();
+
+  if (isAuthenticated() && !pin && !path.startsWith("/auth/")) {
+    logout();
+    throw new Error("Session expired (no PIN stored). Please sign in again.");
+  }
+
   const headers: Record<string, string> = {
     "Content-Type": "application/json",
     ...(pin ? { "X-Pin": pin } : {}),
     ...(options.headers as Record<string, string> || {}),
   };
   const res = await fetch(url, { ...options, headers });
-  if (!res.ok) throw new Error(`API error: ${res.status}`);
+
+  if (!res.ok) {
+    let detail = `Request failed (${res.status})`;
+    try {
+      const body = await res.json();
+      if (typeof body.detail === "string") detail = body.detail;
+      else if (Array.isArray(body.detail)) {
+        const parts = body.detail.map((x: { msg?: string }) => x.msg).filter(Boolean);
+        if (parts.length) detail = parts.join("; ");
+      }
+    } catch {
+      /* not JSON */
+    }
+
+    if (res.status === 401 && !path.startsWith("/auth/verify")) logout();
+
+    throw new Error(detail);
+  }
   return res.json();
 }
 
