@@ -11,18 +11,55 @@ npm run dev
 
 ## Deploy on Vercel
 
-- Connect this **repository** (not a parent monorepo folder). **Root Directory** should be the project root (where `package.json` lives).
-- Framework: **Vite** (or leave auto-detect). Build output: **`dist`**.
-- `vercel.json` pins `npm ci` + `vite` build so installs stay small (no Playwright/browsers in CI).
+### Required settings
 
-Set `VITE_API_URL` in Vercel → Environment Variables to your API base (e.g. `https://neofeed.onrender.com`).
+- **Git repo:** connect **`NeoFeedFrontend` only**, not a parent monorepo.
+- **Root Directory:** `.` — the folder that contains this `package.json` and [`vercel.json`](vercel.json).
+- **Build:** [`vercel.json`](vercel.json) sets `npm ci`, `vite` build, output **`dist`**. Framework preset **Vite** (or rely on detection).
+- **Environment:** `VITE_API_URL` = your HTTPS API origin (e.g. `https://neofeed.onrender.com`).
 
-### If you see “dependency size exceeds 500 MB”
+After each deploy, open **Deployments → Production** and note the **Git commit SHA** matches `main` on GitHub. If builds fail, you may keep serving an **older deployment**.
 
-That usually means Vercel is installing **too much** (e.g. Playwright browsers, Bun + duplicate trees, or the **wrong root** so it pulls an entire monorepo). This repo removes Playwright from npm dependencies and uses `npm ci` only. Double-check the GitHub repo and Root Directory on Vercel.
+### Verify: “dependency / bundle size ~5000 MB exceeds 500 MB”
 
-**Do not deploy the Python NeoFeed backend on Vercel** — use Render (or similar). Vercel is for this static frontend only.
+A healthy Vite app should **not** near gigabytes at build time.
+
+| Cause | What to fix |
+|--------|--------------|
+| Wrong **Root Directory** | Point at NeoFeedFrontend root, not workspace root |
+| Wrong **repository** linked | Separate monorepo with multiple apps dragging huge trees |
+| **Playwright / browser installers** pulled in | Confirm `package.json` has **no** `@playwright/test` on deployed branch |
+| Installing with **Bun** + mismatched locks | Repo uses **`package-lock.json` + `npm ci`** ([`vercel.json`](vercel.json)) |
+
+**Do not deploy the Python NeoFeed API on Vercel** — use Render or similar.
+
+## Troubleshooting (“Failed to fetch” vs PIN errors)
+
+| Symptom | Likely layer |
+|---------|----------------|
+| Browser says **Failed to fetch** | Network blocked, wrong API URL, mixed `http/https`, extension blocking, DNS, or TLS — **before** HTTP body |
+| **Invalid PIN** / **PIN required** | Auth: `PIN_HASH` on Render vs PIN you type; or missing `X-Pin` ([`src/lib/api.ts`](src/lib/api.ts)) |
+| Wrong or empty feed content | Scraping/database (see NeoFeed `/health`). Read path uses Supabase clusters |
+
+### Browser checks ([`src/lib/api.ts`](src/lib/api.ts))
+
+1. Same browser tab: open `https://<your-api-host>/health` — should return JSON quickly.
+2. DevTools → **Network** → reload NeoFeed → inspect **`/auth/verify`** and **`/clusters/`**:
+   - **(blocked)** / **failed** → address URL, HTTPS, CORS, blocking extensions.
+   - **401** with JSON detail → PIN / session.
+3. **Application → Local Storage** on your NeoFeed domain:
+   - `neofeed_api_url` — if wrong, Settings → API endpoint or delete key to use `VITE_API_URL` / default.
+   - `neofeed_pin`, `neofeed_authenticated` — stale combos can confuse auth; clear and sign in again if needed.
 
 ## Environment
 
-See `.env.example` for `VITE_API_URL`.
+See [`.env.example`](.env.example) for `VITE_API_URL`.
+
+## Architecture sketch
+
+```text
+NeoFeed SPA (this repo, Vercel)
+  → HTTPS + X-Pin
+  → NeoFeed API on Render (/auth/verify, /clusters, …)
+  → Supabase
+```
